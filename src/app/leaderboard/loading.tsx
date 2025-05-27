@@ -1,5 +1,5 @@
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Loader2 } from 'lucide-react';
 
@@ -34,3 +34,4 @@ export default function Loading() {
     </div>
   );
 }
+
