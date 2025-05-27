@@ -30,7 +30,8 @@ export default function LeaderboardPage() {
           throw new Error(errorData.message || 'Impossibile caricare la classifica.');
         }
         const data: LeaderboardEntry[] = await response.json();
-        setLeaderboard(data.map((entry, index) => ({ ...entry, rank: index + 1 })));
+        // Rank is already calculated by the API if using JSON file
+        setLeaderboard(data);
       } catch (err) {
         console.error("Failed to fetch leaderboard:", err);
         const errorMessage = (err as Error).message;
@@ -69,7 +70,7 @@ export default function LeaderboardPage() {
       <Card className="w-full shadow-2xl">
         <CardHeader className="items-center text-center">
           <Trophy className="h-20 w-20 text-primary mb-4" />
-          <CardTitle className="text-3xl font-bold">Classifica Tridm Lab</CardTitle>
+          <CardTitle className="text-3xl font-bold">Classifica TridimLab</CardTitle>
           <CardDescription className="text-lg mt-1">
             Guarda chi sono i migliori giocatori!
           </CardDescription>

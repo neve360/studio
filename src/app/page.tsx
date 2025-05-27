@@ -57,7 +57,7 @@ export default function UsernamePage() {
       <Card className="w-full shadow-2xl">
         <CardHeader className="items-center">
           <Logo className="mb-4" />
-          <CardTitle className="text-3xl font-bold text-center">Benvenuto al Quiz di Tridm Lab!</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center">Benvenuto al Quiz di TridimLab!</CardTitle>
           <CardDescription className="text-center">Inserisci il tuo nome utente per iniziare.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -78,7 +78,7 @@ export default function UsernamePage() {
         </CardContent>
         <CardFooter className="mt-4">
           <p className="text-xs text-muted-foreground text-center w-full">
-            Metti alla prova la tua conoscenza con Tridm Lab.
+            Metti alla prova la tua conoscenza con TridimLab.
           </p>
         </CardFooter>
       </Card>

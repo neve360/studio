@@ -93,9 +93,9 @@ export default function ScorePage() {
   const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
   let feedbackMessage = "";
   if (percentage === 100) {
-    feedbackMessage = "Risultato perfetto! Sei un esperto di Tridm Lab!";
+    feedbackMessage = "Risultato perfetto! Sei un esperto di TridimLab!";
   } else if (percentage >= 75) {
-    feedbackMessage = "Ottimo lavoro! Conosci molto bene il mondo Tridm Lab.";
+    feedbackMessage = "Ottimo lavoro! Conosci molto bene il mondo TridimLab.";
   } else if (percentage >= 50) {
     feedbackMessage = "Buon punteggio! Continua così per migliorare.";
   } else {
