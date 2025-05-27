@@ -15,8 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TridimLab Quiz',
+  title: 'TridimLab',
   description: 'Metti alla prova la tua conoscenza con il quiz di TridimLab!',
+  icons: {
+    icon: 'https://i.imgur.com/XPtFUdG.png', // Imposta il favicon
+    // apple: 'https://i.imgur.com/XPtFUdG.png', // Opzionale per Apple touch icons
+    // shortcut: 'https://i.imgur.com/XPtFUdG.png', // Opzionale per browser più vecchi
+  },
 };
 
 export default function RootLayout({
