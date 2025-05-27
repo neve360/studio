@@ -1,70 +1,37 @@
 
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
 import type { LeaderboardEntry } from '@/types/leaderboard';
+import { kv } from '@vercel/kv'; // Import Vercel KV
 
-// Determina la directory dei dati in modo che funzioni sia in sviluppo che in produzione (Vercel)
-// Su Vercel, le uniche directory scrivibili sono /tmp. Tuttavia, vogliamo leggere/scrivere dal bundle di deploy se possibile.
-// Per la persistenza reale su Vercel, è necessario uno storage esterno (es. Vercel KV, un DB, ecc.)
-// Questa implementazione con file JSON avrà scritture non persistenti su Vercel.
-const dataDir = path.join(process.cwd(), 'data');
-const leaderboardFilePath = path.join(dataDir, 'leaderboard.json');
+const LEADERBOARD_KEY = 'leaderboard';
 
-async function ensureDataDirAndFileExists() {
+// Helper function to get leaderboard data from KV
+async function getLeaderboardFromKV(): Promise<LeaderboardEntry[]> {
   try {
-    await fs.access(dataDir);
+    const data = await kv.get<LeaderboardEntry[]>(LEADERBOARD_KEY);
+    return data || []; // Return empty array if no data or null
   } catch (error) {
-    // Directory does not exist, create it
-    try {
-      await fs.mkdir(dataDir, { recursive: true });
-    } catch (mkdirError) {
-      console.error('Failed to create data directory:', mkdirError);
-      // Non bloccare se la directory non può essere creata, il file potrebbe comunque esistere nel bundle
-    }
-  }
-  try {
-    await fs.access(leaderboardFilePath);
-  } catch (error) {
-    // File does not exist, create it with an empty array
-    try {
-      await fs.writeFile(leaderboardFilePath, '[]', 'utf-8');
-    } catch (writeFileError) {
-      console.error('Failed to create leaderboard.json:', writeFileError);
-      // Potrebbe non essere possibile scrivere su Vercel, ma tentiamo
-    }
+    console.error('Error fetching leaderboard from Vercel KV:', error);
+    // In case of error fetching from KV, you might return an empty array or throw
+    // For robustness, let's return an empty array so the app can still function
+    return []; 
   }
 }
 
-async function readLeaderboardFile(): Promise<LeaderboardEntry[]> {
-  await ensureDataDirAndFileExists(); // Assicura che il percorso esista, specialmente per lo sviluppo locale
+// Helper function to save leaderboard data to KV
+async function saveLeaderboardToKV(data: LeaderboardEntry[]): Promise<void> {
   try {
-    const fileContent = await fs.readFile(leaderboardFilePath, 'utf-8');
-    if (fileContent.trim() === '') {
-      return [];
-    }
-    return JSON.parse(fileContent) as LeaderboardEntry[];
+    await kv.set(LEADERBOARD_KEY, data);
   } catch (error) {
-    // Se il file non può essere letto (es. non esiste ancora nel bundle o errore di permessi), restituisce un array vuoto.
-    console.warn('Could not read leaderboard.json, returning empty array. Error:', error);
-    return [];
-  }
-}
-
-async function writeLeaderboardFile(data: LeaderboardEntry[]): Promise<void> {
-  // Su Vercel, questa scrittura potrebbe essere effimera.
-  try {
-    await ensureDataDirAndFileExists(); // Assicura che la directory esista prima di scrivere
-    await fs.writeFile(leaderboardFilePath, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Failed to write to leaderboard.json. Data might not be persisted on this environment (e.g. Vercel). Error:', error);
-    // Non lanciare un errore bloccante, l'app può continuare a funzionare con dati non persistiti
+    console.error('Error saving leaderboard to Vercel KV:', error);
+    // Handle error appropriately, maybe throw to let the caller know
+    throw new Error('Failed to save leaderboard to Vercel KV.');
   }
 }
 
 export async function GET() {
   try {
-    let leaderboardData = await readLeaderboardFile();
+    let leaderboardData = await getLeaderboardFromKV();
     
     leaderboardData.sort((a, b) => {
       if (b.punteggio === a.punteggio) {
@@ -98,7 +65,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Punteggio non valido.' }, { status: 400 });
     }
 
-    let leaderboard = await readLeaderboardFile();
+    let leaderboard = await getLeaderboardFromKV();
     const now = new Date().toISOString();
 
     const existingUserIndex = leaderboard.findIndex(entry => entry.username.toLowerCase() === username.toLowerCase());
@@ -122,10 +89,10 @@ export async function POST(request: Request) {
       return b.punteggio - a.punteggio;
     });
     
-    // Opzionale: limita la dimensione del file leaderboard
+    // Optional: limit the size of the leaderboard stored in KV
     // leaderboard = leaderboard.slice(0, 200); 
 
-    await writeLeaderboardFile(leaderboard);
+    await saveLeaderboardToKV(leaderboard);
 
     return NextResponse.json({ message: 'Punteggio salvato con successo!' }, { status: 201 });
   } catch (error) {
