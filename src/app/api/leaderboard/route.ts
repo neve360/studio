@@ -18,8 +18,8 @@ async function ensureLeaderboardFile() {
       await fs.mkdir(DATA_DIR, { recursive: true });
       console.log('Data directory created.');
     } catch (mkdirError) {
-      console.error('Failed to create data directory:', mkdirError);
-      // We might not be able to create dir on Vercel, but file might be there from repo
+      console.error('Failed to create data directory (this might fail on read-only filesystems):', mkdirError);
+      // Allow to proceed, as directory might exist or file might be deployed.
     }
   }
 
@@ -31,44 +31,42 @@ async function ensureLeaderboardFile() {
       await fs.writeFile(LEADERBOARD_FILE_PATH, JSON.stringify([]), 'utf-8');
       console.log('Leaderboard file created.');
     } catch (writeFileError) {
-      console.error('Failed to create leaderboard file:', writeFileError);
-      // This might fail on Vercel if the directory isn't writable
-      // The file should be present from the repository deployment anyway.
+      console.error('Failed to create leaderboard file (this might fail on read-only filesystems):', writeFileError);
+      // Allow to proceed, file might be deployed.
     }
   }
 }
 
 // Helper function to get leaderboard data
 async function getLeaderboard(): Promise<LeaderboardEntry[]> {
-  // On Vercel, ensureLeaderboardFile might not be able to create,
-  // but it will try. The file should be present from the git deployment.
   await ensureLeaderboardFile();
   try {
     const fileContents = await fs.readFile(LEADERBOARD_FILE_PATH, 'utf-8');
-    if (!fileContents) { // Handle case where file is empty but exists
+    if (!fileContents) {
+        console.log('Leaderboard file is empty, returning empty array.');
         return [];
     }
     return JSON.parse(fileContents) as LeaderboardEntry[];
   } catch (error) {
-    console.error('Error reading leaderboard file or file is empty/corrupted:', error);
+    console.error('Error reading leaderboard file, or file is corrupted/inaccessible. Returning empty array:', error);
     // If there's an error reading (e.g., corrupted file, or it truly doesn't exist despite ensureLeaderboardFile)
-    // return empty array. This is important for Vercel where file might be deployed but not accessible initially.
+    // return empty array. This is important for environments where file might be deployed but not accessible initially
+    // or if ensureLeaderboardFile failed to create it due to permissions.
     return [];
   }
 }
 
 // Helper function to save leaderboard data
 async function saveLeaderboard(data: LeaderboardEntry[]): Promise<void> {
-  // ensureLeaderboardFile will attempt to create if not present, but on Vercel, writing might fail.
-  await ensureLeaderboardFile();
+  await ensureLeaderboardFile(); // Ensure directory and file attempt to exist
   try {
     await fs.writeFile(LEADERBOARD_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
     console.log('Leaderboard data saved to file successfully.');
   } catch (error) {
-    console.error('Error writing to leaderboard file (this is expected on Vercel/serverless environments with read-only filesystems for deployed files):', error);
+    console.error('Error writing to leaderboard file (this is expected on some serverless environments with read-only/ephemeral filesystems for deployed files):', error);
     // This error is critical as data saving failed.
-    // On Vercel, this write will likely not persist.
-    throw new Error('Failed to save leaderboard data to file. Writes may not be persistent on this hosting environment.');
+    // On Vercel, this write will likely not persist reliably.
+    throw new Error('Failed to save leaderboard data to file.');
   }
 }
 
@@ -136,17 +134,23 @@ export async function POST(request: Request) {
     
     await saveLeaderboard(leaderboard);
 
-    return NextResponse.json({ message: 'Punteggio salvato con successo (potrebbe non essere persistente su Vercel)!' }, { status: 201 });
+    return NextResponse.json({ message: 'Punteggio salvato con successo!' }, { status: 201 });
   } catch (error) {
-    console.error('API POST /api/leaderboard Error:', error);
-    let errorMessage = 'Errore nel salvataggio del punteggio.';
-    if (error instanceof Error) {
-        errorMessage = error.message;
+    console.error('API POST /api/leaderboard Error:', error); // Logga l'errore completo per il debug
+    
+    // Default a un messaggio di errore generico
+    let userFacingErrorMessage = 'Errore nel salvataggio del punteggio.'; 
+
+    // Se l'errore è quello specifico relativo al fallimento della scrittura del file,
+    // il messaggio generico di default è quello che vogliamo mostrare all'utente,
+    // per evitare il testo sulla non persistenza.
+    // Se si tratta di un altro tipo di errore e ha un messaggio, usiamo quello.
+    if (error instanceof Error && !error.message.includes('Failed to save leaderboard data to file')) {
+      userFacingErrorMessage = error.message; // Usa il messaggio dell'errore se non è quello di scrittura file
     }
-    // Provide a more specific message if the error is due to file saving issues
-    if (errorMessage.includes('Failed to save leaderboard data to file')) {
-        return NextResponse.json({ message: `Errore nel salvataggio del punteggio nel file. Le modifiche potrebbero non essere permanenti su questa piattaforma di hosting.` }, { status: 500 });
-    }
-    return NextResponse.json({ message: errorMessage }, { status: 500 });
+    // Se error non è una Error instance, o se è l'errore di scrittura file che lancia "Failed to save...",
+    // userFacingErrorMessage rimane il generico "Errore nel salvataggio del punteggio."
+
+    return NextResponse.json({ message: userFacingErrorMessage }, { status: 500 });
   }
 }
