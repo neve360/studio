@@ -128,7 +128,7 @@ export default function ScorePage() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="mt-6 flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3">
+        <CardFooter className="mt-6 flex flex-col space-y-3">
           <Button onClick={handlePlayAgain} className="w-full text-lg" size="lg" variant="outline">
             <RotateCcw className="mr-2 h-5 w-5" />
             Gioca Ancora
