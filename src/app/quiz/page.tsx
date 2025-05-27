@@ -112,13 +112,14 @@ export default function QuizPage() {
                 onClick={() => handleAnswer(option.id)}
                 disabled={isAnswered}
                 className={cn(
-                  "w-full justify-start text-left p-4 h-auto text-base",
+                  "w-full justify-start text-left p-3 h-auto text-base whitespace-normal", // Added whitespace-normal, adjusted padding
                   buttonClasses
                 )}
                 variant="outline" 
               >
                 {feedbackIcon}
-                <span className="font-semibold mr-2">{option.id}.</span> {option.text}
+                <span className="font-semibold mr-2">{option.id}.</span>
+                <span className="flex-1">{option.text}</span> {/* Added flex-1 to allow text to wrap */}
               </Button>
             );
           })}

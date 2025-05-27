@@ -30,12 +30,13 @@ export default function ScorePage() {
     if (storedTotalQuestions) setTotalQuestions(parseInt(storedTotalQuestions, 10));
 
     if (!storedUsername || storedScore === null || storedTotalQuestions === null) {
-      setTimeout(() => router.push('/'), 0);
+      // Redirect to home if data is missing, ensures this page is accessed correctly
+      setTimeout(() => router.push('/'), 0); 
     }
   }, [router]);
 
   useEffect(() => {
-    if (isClient && username && score !== null) {
+    if (isClient && username && score !== null && totalQuestions !== null) { // Ensure totalQuestions is also checked
       const saveScore = async () => {
         setIsSaving(true);
         try {
@@ -65,12 +66,10 @@ export default function ScorePage() {
       };
       saveScore();
     }
-  }, [isClient, username, score, toast]);
+  }, [isClient, username, score, totalQuestions, toast]);
 
   const handlePlayAgain = () => {
     if (isClient) {
-      // Username can be kept, or cleared if a new user is expected
-      // localStorage.removeItem('quizUsername'); 
       localStorage.removeItem('quizScore');
       localStorage.removeItem('quizTotalQuestions');
     }
@@ -129,7 +128,7 @@ export default function ScorePage() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="mt-6 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
+        <CardFooter className="mt-6 flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3">
           <Button onClick={handlePlayAgain} className="w-full text-lg" size="lg" variant="outline">
             <RotateCcw className="mr-2 h-5 w-5" />
             Gioca Ancora
