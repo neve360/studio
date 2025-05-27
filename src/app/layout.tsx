@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: '3D Print Quiz',
-  description: 'Test your knowledge about 3D printing!',
+  title: 'Tridm Lab Quiz',
+  description: 'Metti alla prova la tua conoscenza con il quiz di Tridm Lab!',
 };
 
 export default function RootLayout({

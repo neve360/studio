@@ -12,7 +12,7 @@ const Logo: React.FC<LogoProps> = ({ size = 48, className }) => {
     <div className={`flex items-center space-x-2 text-primary ${className}`}>
       <Layers size={size} strokeWidth={2} />
       <span className="text-2xl font-bold" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-        3D Print Quiz
+        Tridm Lab
       </span>
     </div>
   );

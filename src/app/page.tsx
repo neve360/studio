@@ -18,6 +18,9 @@ export default function UsernamePage() {
 
   useEffect(() => {
     setIsClient(true);
+    // Clear previous quiz session data if any, except username for convenience
+    localStorage.removeItem('quizScore');
+    localStorage.removeItem('quizTotalQuestions');
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -37,7 +40,6 @@ export default function UsernamePage() {
   };
 
   if (!isClient) {
-    // Return a simple loading state or null to prevent hydration mismatch
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-full max-w-md mx-auto p-4 animate-pulse">
             <div className="w-full bg-card p-8 rounded-lg shadow-2xl space-y-6">
@@ -55,7 +57,7 @@ export default function UsernamePage() {
       <Card className="w-full shadow-2xl">
         <CardHeader className="items-center">
           <Logo className="mb-4" />
-          <CardTitle className="text-3xl font-bold text-center">Benvenuto al Quiz sulla Stampa 3D!</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center">Benvenuto al Quiz di Tridm Lab!</CardTitle>
           <CardDescription className="text-center">Inserisci il tuo nome utente per iniziare.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -76,7 +78,7 @@ export default function UsernamePage() {
         </CardContent>
         <CardFooter className="mt-4">
           <p className="text-xs text-muted-foreground text-center w-full">
-            Metti alla prova la tua conoscenza del mondo della stampa 3D.
+            Metti alla prova la tua conoscenza con Tridm Lab.
           </p>
         </CardFooter>
       </Card>
